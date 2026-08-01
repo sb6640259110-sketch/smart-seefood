@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Seafood Farm & Shop</title>
+    
+    <!-- โหลดไลบรารี React จาก CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* =========================================
+           ส่วนที่ 1: ตกแต่งความสวยงาม (CSS Dark Mode)
+           ========================================= */
+        :root {
+            --bg-main: #0a0d14;         
+            --bg-card: #131823;         
+            --accent-cyan: #26dec0;     
+            --accent-gold: #ffd700;
+            --text-main: #e2e8f0;       
+            --text-muted: #8b949e;      
+            --border-color: #263040;    
+        }
+        
+        body { margin: 0; padding: 0; }
+        .app-container { display: flex; min-height: 100vh; font-family: 'Segoe UI', Prompt, sans-serif; background-color: var(--bg-main); color: var(--text-main); }
+        
+        .sidebar { width: 260px; background-color: var(--bg-card); border-right: 1px solid var(--border-color); padding-top: 30px; display: flex; flex-direction: column; z-index: 10; }
+        .sidebar h2 { text-align: center; margin-bottom: 40px; font-size: 1.4rem; color: var(--accent-cyan); }
+        .menu-item { padding: 16px 24px; cursor: pointer; transition: 0.3s; font-size: 1.05rem; border-left: 4px solid transparent; color: var(--text-muted); }
+        .menu-item:hover, .menu-item.active { background-color: rgba(38, 222, 192, 0.05); border-left: 4px solid var(--accent-cyan); color: var(--accent-cyan); }
+        
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .section { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .header-title { font-size: 1.8rem; margin-bottom: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
+        
+        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 30px; }
+        .product-card { background: var(--bg-card); padding: 30px; border-radius: 16px; border: 1px solid var(--border-color); transition: 0.3s; }
+        .product-card:hover { transform: translateY(-3px); border-color: rgba(38, 222, 192, 0.4); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .product-card h3 { margin-top: 0; color: var(--text-main); font-size: 1.3rem; margin-bottom: 5px; }
+        .product-card p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 25px; }
+        
+        /* การ์ดพิเศษสำหรับปลาเก๋ายักษ์ */
+        .product-card.special-item {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(19, 24, 35, 1) 100%);
+            border: 2px solid var(--accent-gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+        .product-card.special-item:hover {
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+            transform: translateY(-5px);
+        }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-muted); }
+        select, input[type="text"], input[type="number"], input[type="date"] { width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-size: 1rem; color: var(--text-main); background-color: var(--bg-main); color-scheme: dark; }
+        select:focus, input:focus { outline: none; border-color: var(--accent-cyan); }
+        
+        button { background-color: rgba(38, 222, 192, 0.05); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); padding: 14px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.05rem; transition: 0.2s; margin-top: 10px; }
+        button:hover:not(:disabled) { background-color: var(--accent-cyan); color: #000; box-shadow: 0 0 12px rgba(38, 222, 192, 0.3); }
+        button:disabled { cursor: not-allowed; opacity: 0.6; }
+        
+        button.btn-special {
+            background-color: rgba(255, 215, 0, 0.1);
+            color: var(--accent-gold);
+            border: 1px solid var(--accent-gold);
+        }
+        button.btn-special:hover:not(:disabled) {
+            background-color: var(--accent-gold);
+            color: #000;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 40px; }
+        .card { padding: 25px; border-radius: 16px; color: #fff; backdrop-filter: blur(10px); }
+        .card h3 { margin: 0 0 10px 0; font-size: 1.1rem; }
+        .card p { margin: 0; font-size: 2.2rem; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .bg-green { background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(16, 185, 129, 0.8); }
+        .bg-orange { background: linear-gradient(135deg, rgba(245, 158, 11, 0.4), rgba(245, 158, 11, 0.1)); border: 1px solid rgba(245, 158, 11, 0.8); }
+        .bg-blue { background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.1)); border: 1px solid rgba(59, 130, 246, 0.8); }
+        .bg-pink { background: linear-gradient(135deg, rgba(236, 72, 153, 0.4), rgba(236, 72, 153, 0.1)); border: 1px solid rgba(236, 72, 153, 0.8); }
+        
+        table { width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-top: 15px; }
+        th, td { padding: 18px 20px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background-color: rgba(255, 255, 255, 0.02); color: var(--text-muted); }
+        
+        .tracking-box { background: var(--bg-card); padding: 30px; border-radius: 16px; border: 1px solid var(--border-color); }
+        
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+        .badge-warning { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid #f59e0b; }
+        .badge-success { background: rgba(38, 222, 192, 0.15); color: #26dec0; border: 1px solid #26dec0; }
+        .badge-info { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid #3b82f6; }
+    </style>
+</head>
+<body>
+    
+    <div id="root"></div>
+
+    <!-- =========================================
+         ส่วนที่ 2: ระบบการทำงาน (React / JavaScript)
+         ========================================= -->
+    <script type="text/babel">
+        const { useState } = React;
+
+        const PRICING = {
+            'กุ้งก้ามกราม': { '10': 500, '9': 550, '8': 600, '7': 700, '6': 800, '5': 900, '4': 1100, '3': 1300, '2': 1600 },
+            'ปูดำ/ปูทะเล': { '4': 450, '3': 600, '2': 800, '1.5': 1000, '1': 1300 },
+            'กุ้งมังกร': { '1': 1800, '2': 3600, '3': 5500, '4': 7500, '5': 9500, '6': 11500, '7': 13500 },
+            'ปลากระพงขาว': { '1': 180, '2': 360, '3': 540, '4': 720, '5': 900, '6': 1140, '7': 1330, '8': 1520, '9': 1710, '10': 1900 },
+            'หอยเชลล์': { 'เล็ก': 350, 'กลาง': 450, 'ใหญ่': 600, 'จัมโบ้': 800 },
+            'หอยแครง': { 'เล็ก': 120, 'กลาง': 150, 'ใหญ่': 180, 'คัดพิเศษ': 220 },
+            'ปลาหมึกกล้วย': { 'เล็ก': 150, 'กลาง': 220, 'ใหญ่': 280 },
+            'ปูม้า': { 'เล็ก': 350, 'กลาง': 450, 'ใหญ่': 550 },
+            'หอยนางรมสุราษฎร์': { 'กลาง': 45, 'ใหญ่': 60, 'จัมโบ้': 80 },
+            'กุ้งแชบ๊วย': { 'เล็ก': 250, 'กลาง': 350, 'ใหญ่': 450 },
+            'แมงดาทะเลไข่': { 'กลาง': 300, 'ใหญ่': 400 },
+            'ปลาแซลมอน': { '5kg': 2500 },
+            'ปูทาราบะ': { '3kg': 8900 },
+            'กุ้งมังกรเจ็ดสี': { '2.5kg': 5500 },
+            'ปลาหิมะ': { '4kg': 4800 },
+            'หอยเป๋าฮื้อสด': { '1kg': 2200 },
+            'ปูจั๊กจั่น': { '1kg': 650 },
+            // อัปเดตปลาเก๋ายักษ์ 2 ขนาดตามสั่ง
+            'ปลาเก๋ายักษ์': { '150kg': 109000, '320kg': 351000 }
+        };
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('shop');
+
+            // --- โปรโมชั่น Double Day ---
+            const today = new Date();
+            const currentDay = today.getDate();
+            const currentMonth = today.getMonth() + 1;
+            const isDoubleDay = (currentDay === currentMonth) || true; 
+            const displayDay = currentDay === currentMonth ? currentDay : 9; 
+            const displayMonth = currentDay === currentMonth ? currentMonth : 9;
+            const todayPromoCode = `MEGA${displayDay}${displayMonth}`; 
+
+            const [showPromoPopup, setShowPromoPopup] = useState(true);
+            const [promoCodeInput, setPromoCodeInput] = useState('');
+            const [discountPercent, setDiscountPercent] = useState(0);
+
+            // --- State ตะกร้าและ Checkout ---
+            const [cart, setCart] = useState([]);
+            const [customerName, setCustomerName] = useState('');
+            const [customerPhone, setCustomerPhone] = useState('');
+            const [customerAddress, setCustomerAddress] = useState('');
+            const [paymentMethod, setPaymentMethod] = useState('cod'); 
+
+            // --- State สินค้า ---
+            const [shrimpSize, setShrimpSize] = useState('10');
+            const [shrimpDelivery, setShrimpDelivery] = useState('แพ็คออกซิเจน (แบบเป็นๆ)');
+            const [shrimpQty, setShrimpQty] = useState(1);
+
+            const [crabSize, setCrabSize] = useState('4');
+            const [crabDelivery, setCrabDelivery] = useState('มัดเชือกกล้วย (แบบเป็นๆ)');
+            const [crabQty, setCrabQty] = useState(1);
+
+            const [lobsterSize, setLobsterSize] = useState('1');
+            const [lobsterDelivery, setLobsterDelivery] = useState('แพ็คออกซิเจน (แบบเป็นๆ)');
+            const [lobsterQty, setLobsterQty] = useState(1);
+
+            const [snapperSize, setSnapperSize] = useState('1');
+            const [snapperDelivery, setSnapperDelivery] = useState('น็อคน้ำแข็ง (แบบแช่แข็ง)');
+            const [snapperQty, setSnapperQty] = useState(1);
+
+            const [scallopSize, setScallopSize] = useState('เล็ก');
+            const [scallopDelivery, setScallopDelivery] = useState('แช่แข็ง (ทำความสะอาดแล้ว)');
+            const [scallopQty, setScallopQty] = useState(1);
+
+            const [cockleSize, setCockleSize] = useState('เล็ก');
+            const [cockleDelivery, setCockleDelivery] = useState('แพ็คออกซิเจน (แบบเป็นๆ)');
+            const [cockleQty, setCockleQty] = useState(1);
+
+            const [squidSize, setSquidSize] = useState('ใหญ่');
+            const [squidDelivery, setSquidDelivery] = useState('น็อคน้ำแข็ง (แบบแช่แข็ง)');
+            const [squidQty, setSquidQty] = useState(1);
+
+            const [blueCrabSize, setBlueCrabSize] = useState('ใหญ่');
+            const [blueCrabDelivery, setBlueCrabDelivery] = useState('แพ็คออกซิเจน (แบบเป็นๆ)');
+            const [blueCrabQty, setBlueCrabQty] = useState(1);
+
+            const [oysterSize, setOysterSize] = useState('จัมโบ้');
+            const [oysterDelivery, setOysterDelivery] = useState('น็อคน้ำแข็ง (แบบแช่แข็ง)');
+            const [oysterQty, setOysterQty] = useState(1);
+
+            const [bananaShrimpSize, setBananaShrimpSize] = useState('ใหญ่');
+            const [bananaShrimpDelivery, setBananaShrimpDelivery] = useState('น็อคน้ำแข็ง (แบบแช่แข็ง)');
+            const [bananaShrimpQty, setBananaShrimpQty] = useState(1);
+
+            const [horseshoeCrabSize, setHorseshoeCrabSize] = useState('ใหญ่');
+            const [horseshoeCrabDelivery, setHorseshoeCrabDelivery] = useState('น็อคน้ำแข็ง (แบบแช่แข็ง)');
+            const [horseshoeCrabQty, setHorseshoeCrabQty] = useState(1);
+
+            const [salmonDelivery, setSalmonDelivery] = useState('น็อคน้ำแข็ง (แบบแช่แข็ง)');
+            const [salmonQty, setSalmonQty] = useState(1);
+
+            const [kingCrabDelivery, setKingCrabDelivery] = useState('แพ็คออกซิเจน (แบบเป็นๆ)');
+            const [kingCrabQty, setKingCrabQty] = useState(1);
+
+            const [sevenLobsterDelivery, setSevenLobsterDelivery] = useState('แพ็คออกซิเจน (แบบเป็นๆ)');
+            const [sevenLobsterQty, setSevenLobsterQty] = useState(1);
+
+            const [snowFishDelivery, setSnowFishDelivery] = useState('น็อคน้ำแข็ง (แบบแช่แข็ง)');
+            const [snowFishQty, setSnowFishQty] = useState(1);
+
+            const [abaloneDelivery, setAbaloneDelivery] = useState('แพ็คออกซิเจน (แบบเป็นๆ)');
+            const [abaloneQty, setAbaloneQty] = useState(1);
+
+            const [frogCrabDelivery, setFrogCrabDelivery] = useState('น็อคน้ำแข็ง (แบบแช่แข็ง)');
+            const [frogCrabQty, setFrogCrabQty] = useState(1);
+
+            // State สำหรับปลาเก๋ายักษ์ (เลือกขนาด 150kg หรือ 320kg)
+            const [giantGrouperSize, setGiantGrouperSize] = useState('150kg');
+            const [giantGrouperDelivery, setGiantGrouperDelivery] = useState('รถออกซิเจนพิเศษ (แบบเป็นๆ)');
+            const [giantGrouperQty, setGiantGrouperQty] = useState(1);
+
+            // --- State ระบบหลังบ้าน (Records) ---
+            const [trackId, setTrackId] = useState('');
+            const [trackingStatus, setTrackingStatus] = useState(false);
+
+            const [recordType, setRecordType] = useState('in'); 
+            const [recordDate, setRecordDate] = useState(new Date().toISOString().split('T')[0]); 
+            const [recordProduct, setRecordProduct] = useState('กุ้งก้ามกราม');
+            const [recordQty, setRecordQty] = useState(1);
+            const [recordPrice, setRecordPrice] = useState(0);
+
+            // ข้อมูลสต็อกเริ่มต้น (ทุกอย่างเป็น 500)
+            const [recordsList, setRecordsList] = useState([
+                { id: 1, date: new Date().toISOString().split('T')[0], type: 'in', product: 'กุ้งก้ามกราม', qty: 500, price: '-' },
+                { id: 2, date: new Date().toISOString().split('T')[0], type: 'in', product: 'ปูดำ/ปูทะเล', qty: 500, price: '-' },
+                { id: 3, date: new Date().toISOString().split('T')[0], type: 'in', product: 'กุ้งมังกร', qty: 500, price: '-' },
+                { id: 4, date: new Date().toISOString().split('T')[0], type: 'in', product: 'ปลากระพงขาว', qty: 500, price: '-' },
+                { id: 5, date: new Date().toISOString().split('T')[0], type: 'in', product: 'หอยเชลล์', qty: 500, price: '-' },
+                { id: 6, date: new Date().toISOString().split('T')[0], type: 'in', product: 'หอยแครง', qty: 500, price: '-' },
+                { id: 7, date: new Date().toISOString().split('T')[0], type: 'in', product: 'ปลาหมึกกล้วย', qty: 500, price: '-' },
+                { id: 8, date: new Date().toISOString().split('T')[0], type: 'in', product: 'ปูม้า', qty: 500, price: '-' },
+                { id: 9, date: new Date().toISOString().split('T')[0], type: 'in', product: 'หอยนางรมสุราษฎร์', qty: 500, price: '-' },
+                { id: 10, date: new Date().toISOString().split('T')[0], type: 'in', product: 'กุ้งแชบ๊วย', qty: 500, price: '-' },
+                { id: 11, date: new Date().toISOString().split('T')[0], type: 'in', product: 'แมงดาทะเลไข่', qty: 500, price: '-' },
+                { id: 12, date: new Date().toISOString().split('T')[0], type: 'in', product: 'ปลาแซลมอน', qty: 500, price: '-' },
+                { id: 13, date: new Date().toISOString().split('T')[0], type: 'in', product: 'ปูทาราบะ', qty: 500, price: '-' },
+                { id: 14, date: new Date().toISOString().split('T')[0], type: 'in', product: 'กุ้งมังกรเจ็ดสี', qty: 500, price: '-' },
+                { id: 15, date: new Date().toISOString().split('T')[0], type: 'in', product: 'ปลาหิมะ', qty: 500, price: '-' },
+                { id: 16, date: new Date().toISOString().split('T')[0], type: 'in', product: 'หอยเป๋าฮื้อสด', qty: 500, price: '-' },
+                { id: 17, date: new Date().toISOString().split('T')[0], type: 'in', product: 'ปูจั๊กจั่น', qty: 500, price: '-' },
+                { id: 18, date: new Date().toISOString().split('T')[0], type: 'in', product: 'ปลาเก๋ายักษ์', qty: 500, price: '-' }
+            ]);
+
+            const getAvailableStock = (productName) => {
+                const totalIn = recordsList.filter(r => r.product === productName && r.type === 'in').reduce((sum, r) => sum + r.qty, 0);
+                const totalOut = recordsList.filter(r => r.product === productName && r.type === 'out').reduce((sum, r) => sum + r.qty, 0);
+                const totalInCart = cart.filter(c => c.product === productName).reduce((sum, c) => sum + c.qty, 0);
+                return totalIn - totalOut - totalInCart;
+            };
+
+            const stockShrimp = getAvailableStock('กุ้งก้ามกราม');
+            const stockCrab = getAvailableStock('ปูดำ/ปูทะเล');
+            const stockLobster = getAvailableStock('กุ้งมังกร');
+            const stockSnapper = getAvailableStock('ปลากระพงขาว');
+            const stockScallop = getAvailableStock('หอยเชลล์');
+            const stockCockle = getAvailableStock('หอยแครง');
+            const stockSquid = getAvailableStock('ปลาหมึกกล้วย');
+            const stockBlueCrab = getAvailableStock('ปูม้า');
+            const stockOyster = getAvailableStock('หอยนางรมสุราษฎร์');
+            const stockBananaShrimp = getAvailableStock('กุ้งแชบ๊วย');
+            const stockHorseshoeCrab = getAvailableStock('แมงดาทะเลไข่');
+            const stockSalmon = getAvailableStock('ปลาแซลมอน');
+            const stockKingCrab = getAvailableStock('ปูทาราบะ');
+            const stockSevenLobster = getAvailableStock('กุ้งมังกรเจ็ดสี');
+            const stockSnowFish = getAvailableStock('ปลาหิมะ');
+            const stockAbalone = getAvailableStock('หอยเป๋าฮื้อสด');
+            const stockFrogCrab = getAvailableStock('ปูจั๊กจั่น');
+            const stockGiantGrouper = getAvailableStock('ปลาเก๋ายักษ์');
+
+            const handleAddToCart = (product, sizeKey, delivery, qty, unit, currentStock) => {
+                const orderQty = Number(qty);
+                if (orderQty <= 0) return alert('กรุณาระบุจำนวนที่ถูกต้อง');
+                if (orderQty > currentStock) return alert(`❌ สินค้าในสต็อกไม่เพียงพอ!\n(สินค้าคงเหลือ: ${currentStock} ${unit})`);
+                
+                const pricePerUnit = PRICING[product][sizeKey];
+                const total = pricePerUnit * orderQty;
+                
+                const newItem = { id: Date.now() + Math.random(), product, sizeKey, delivery, qty: orderQty, unit, pricePerUnit, total };
+                setCart([...cart, newItem]);
+                alert(`เพิ่ม ${product} ลงตะกร้าเรียบร้อยแล้ว!`);
+            };
+
+            const handleRemoveFromCart = (idToRemove) => setCart(cart.filter(item => item.id !== idToRemove));
+
+            const cartTotalAmount = cart.reduce((sum, item) => sum + item.total, 0);
+            const discountAmount = cartTotalAmount * (discountPercent / 100);
+            const finalTotalAmount = cartTotalAmount - discountAmount;
+
+            const applyPromoCode = () => {
+                if (promoCodeInput.toUpperCase() === todayPromoCode) {
+                    setDiscountPercent(10);
+                    alert('✅ ใช้โค้ดสำเร็จ! ได้รับส่วนลด 10%');
+                } else {
+                    setDiscountPercent(0);
+                    alert('❌ โค้ดส่วนลดไม่ถูกต้อง หรือหมดอายุแล้ว');
+                }
+            };
+
+            const goToCheckout = () => {
+                if (cart.length === 0) return alert('ตะกร้าสินค้าว่างเปล่า!');
+                setActiveTab('checkout');
+            };
+
+            const handleConfirmOrder = () => {
+                if (!customerName || !customerPhone || !customerAddress) return alert('กรุณากรอกข้อมูลจัดส่งให้ครบถ้วน');
+
+                const autoRecords = cart.map(item => ({
+                    id: Date.now() + Math.random(), date: new Date().toISOString().split('T')[0], type: 'out',
+                    product: item.product, qty: item.qty, price: item.total
+                }));
+
+                setRecordsList([...autoRecords, ...recordsList]);
+                alert(`✅ ยืนยันคำสั่งซื้อสำเร็จ!\nขอบคุณคุณ ${customerName}\nยอดชำระทั้งหมด: ฿${finalTotalAmount.toLocaleString()}\n(ระบบทำการตัดสต็อกสินค้าเรียบร้อยแล้ว)`);
+                
+                setCart([]); setCustomerName(''); setCustomerPhone(''); setCustomerAddress(''); setPromoCodeInput(''); setDiscountPercent(0); setActiveTab('orders'); 
+            };
+
+            const handleTrackOrder = () => {
+                if(trackId.trim() === '') return alert('กรุณากรอกรหัสคำสั่งซื้อ');
+                setTrackingStatus(true);
+            };
+
+            const handleSaveRecord = () => {
+                if (recordQty <= 0) return alert('กรุณากรอกจำนวนให้ถูกต้อง');
+                const newRecord = { id: Date.now(), date: recordDate, type: recordType, product: recordProduct, qty: parseFloat(recordQty), price: recordType === 'out' ? parseFloat(recordPrice) : '-' };
+                setRecordsList([newRecord, ...recordsList]);
+                alert('บันทึกข้อมูลเรียบร้อยแล้ว!');
+                setRecordQty(1); setRecordPrice(0);
+            };
+
+            const totalImported = recordsList.filter(r => r.type === 'in').reduce((sum, r) => sum + r.qty, 0);
+            const totalSoldQty = recordsList.filter(r => r.type === 'out').reduce((sum, r) => sum + r.qty, 0);
+            const totalRevenue = recordsList.filter(r => r.type === 'out').reduce((sum, r) => sum + (r.price || 0), 0);
+            const disabledBtnStyle = { backgroundColor: 'rgba(255,255,255,0.05)', color: '#666', border: '1px solid #444', cursor: 'not-allowed' };
+
+            return (
+                <div className="app-container">
+                    
+                    {/* ป๊อปอัปแจ้งเตือนโปรโมชั่น */}
+                    {isDoubleDay && showPromoPopup && (
+                        <div style={{ position: 'fixed', left: '30px', bottom: '30px', background: 'linear-gradient(135deg, #f53844 0%, #42378f 100%)', padding: '25px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(245, 56, 68, 0.4)', color: 'white', zIndex: 9999, width: '260px' }}>
+                            <button onClick={() => setShowPromoPopup(false)} style={{ position: 'absolute', top: '10px', right: '15px', background: 'transparent', border: 'none', color: 'white', fontSize: '1.2rem', padding: 0, width: 'auto' }}>&times;</button>
+                            <h3 style={{ margin: '0 0 10px 0' }}>🎉 โปร {displayDay}.{displayMonth}</h3>
+                            <p style={{ margin: '0 0 15px 0', fontSize: '0.95rem' }}>รับโค้ดส่วนลด <b>10%</b></p>
+                            <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', textAlign: 'center', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.4rem', letterSpacing: '3px', border: '1px dashed rgba(255,255,255,0.5)' }}>{todayPromoCode}</div>
+                            <button onClick={() => { navigator.clipboard.writeText(todayPromoCode); alert('คัดลอกโค้ดแล้ว!'); }} style={{ background: 'white', color: '#f53844', border: 'none' }}>📋 คัดลอกโค้ด</button>
+                        </div>
+                    )}
+
+                    {/* เมนูด้านซ้าย */}
+                    <div className="sidebar">
+                        <h2>🦐 Farm & Shop Mgt.</h2>
+                        <div className={`menu-item ${activeTab === 'shop' ? 'active' : ''}`} onClick={() => setActiveTab('shop')}>🛒 หน้าร้านเลือกซื้อสินค้า</div>
+                        <div className={`menu-item ${activeTab === 'cart' || activeTab === 'checkout' ? 'active' : ''}`} onClick={() => setActiveTab('cart')} style={{ color: cart.length > 0 ? '#26dec0' : '' }}>🛍️ ตะกร้าสินค้า ({cart.length})</div>
+                        <div className={`menu-item ${activeTab === 'records' ? 'active' : ''}`} onClick={() => setActiveTab('records')}>📝 บันทึกข้อมูลซื้อ-ขาย</div>
+                        <div className={`menu-item ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>📦 เช็คจำนวนคำสั่งซื้อ</div>
+                        <div className={`menu-item ${activeTab === 'tracking' ? 'active' : ''}`} onClick={() => setActiveTab('tracking')}>🚚 เช็คสถานะการขนส่ง</div>
+                    </div>
+
+                    {/* เนื้อหาหลัก */}
+                    <div className="main-content">
+                        
+                        {/* ======================= 1. หน้าร้าน (Shop) ======================= */}
+                        {activeTab === 'shop' && (
+                            <div className="section">
+                                <h1 className="header-title">หน้าร้าน: สั่งซื้ออาหารทะเลพรีเมียม (18 รายการ)</h1>
+                                <div className="shop-grid">
+                                    
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>กุ้งก้ามกราม</h3> <span style={{ color: stockShrimp > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockShrimp} กก.</span></div>
+                                        <div className="form-group"><label>ขนาด (ไซส์):</label><select value={shrimpSize} onChange={(e) => setShrimpSize(e.target.value)}><option value="10">10 ตัว/กก. (฿500)</option><option value="9">9 ตัว/กก. (฿550)</option><option value="8">8 ตัว/กก. (฿600)</option><option value="7">7 ตัว/กก. (฿700)</option><option value="6">6 ตัว/กก. (฿800)</option><option value="5">5 ตัว/กก. (฿900)</option><option value="4">4 ตัว/กก. (฿1,100)</option><option value="3">3 ตัว/กก. (฿1,300)</option><option value="2">2 ตัว/กก. (฿1,600)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={shrimpDelivery} onChange={(e) => setShrimpDelivery(e.target.value)}><option value="แพ็คออกซิเจน (แบบเป็นๆ)">แพ็คออกซิเจน (แบบเป็นๆ)</option><option value="น็อคน้ำแข็ง (แบบแช่แข็ง)">น็อคน้ำแข็ง (แบบแช่แข็ง)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (กก.):</label><input type="number" min="1" max={stockShrimp} value={shrimpQty} onChange={(e) => setShrimpQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('กุ้งก้ามกราม', shrimpSize, shrimpDelivery, shrimpQty, 'กก.', stockShrimp)} disabled={stockShrimp <= 0} style={stockShrimp <= 0 ? disabledBtnStyle : {}}>{stockShrimp <= 0 ? '❌ สินค้าหมด' : `ใส่ตะกร้า (฿${PRICING['กุ้งก้ามกราม'][shrimpSize].toLocaleString()})`}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>ปูดำ / ปูทะเล</h3> <span style={{ color: stockCrab > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockCrab} กก.</span></div>
+                                        <div className="form-group"><label>ขนาด (ไซส์):</label><select value={crabSize} onChange={(e) => setCrabSize(e.target.value)}><option value="4">4 ตัว/กก. (฿450)</option><option value="3">3 ตัว/กก. (฿600)</option><option value="2">2 ตัว/กก. (฿800)</option><option value="1.5">1.5 ตัว/กก. (฿1,000)</option><option value="1">1 ตัว/กก. (฿1,300)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={crabDelivery} onChange={(e) => setCrabDelivery(e.target.value)}><option value="มัดเชือกกล้วย (แบบเป็นๆ)">มัดเชือกกล้วย (แบบเป็นๆ)</option><option value="น็อคน้ำแข็ง (แบบแช่แข็ง)">น็อคน้ำแข็ง (แบบแช่แข็ง)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (กก.):</label><input type="number" min="1" max={stockCrab} value={crabQty} onChange={(e) => setCrabQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('ปูดำ/ปูทะเล', crabSize, crabDelivery, crabQty, 'กก.', stockCrab)} disabled={stockCrab <= 0} style={stockCrab <= 0 ? disabledBtnStyle : {}}>{stockCrab <= 0 ? '❌ สินค้าหมด' : `ใส่ตะกร้า (฿${PRICING['ปูดำ/ปูทะเล'][crabSize].toLocaleString()})`}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>กุ้งมังกร</h3> <span style={{ color: stockLobster > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockLobster} ตัว</span></div>
+                                        <div className="form-group"><label>ขนาด (ต่อตัว):</label><select value={lobsterSize} onChange={(e) => setLobsterSize(e.target.value)}><option value="1">1 กก. (฿1,800)</option><option value="2">2 กก. (฿3,600)</option><option value="3">3 กก. (฿5,500)</option><option value="4">4 กก. (฿7,500)</option><option value="5">5 กก. (฿9,500)</option><option value="6">6 กก. (฿11,500)</option><option value="7">7 กก. (฿13,500)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={lobsterDelivery} onChange={(e) => setLobsterDelivery(e.target.value)}><option value="แพ็คออกซิเจน (แบบเป็นๆ)">แพ็คออกซิเจน (แบบเป็นๆ)</option><option value="น็อคน้ำแข็ง (แบบแช่แข็ง)">น็อคน้ำแข็ง (แบบแช่แข็ง)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (ตัว):</label><input type="number" min="1" max={stockLobster} value={lobsterQty} onChange={(e) => setLobsterQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('กุ้งมังกร', lobsterSize, lobsterDelivery, lobsterQty, 'ตัว', stockLobster)} disabled={stockLobster <= 0} style={stockLobster <= 0 ? disabledBtnStyle : {}}>{stockLobster <= 0 ? '❌ สินค้าหมด' : `ใส่ตะกร้า (฿${PRICING['กุ้งมังกร'][lobsterSize].toLocaleString()})`}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>ปลากระพงขาว</h3> <span style={{ color: stockSnapper > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockSnapper} ตัว</span></div>
+                                        <div className="form-group"><label>ขนาด (ต่อตัว):</label><select value={snapperSize} onChange={(e) => setSnapperSize(e.target.value)}><option value="1">1 กก. (฿180)</option><option value="2">2 กก. (฿360)</option><option value="3">3 กก. (฿540)</option><option value="4">4 กก. (฿720)</option><option value="5">5 กก. (฿900)</option><option value="6">6 กก. (฿1,140)</option><option value="7">7 กก. (฿1,330)</option><option value="8">8 กก. (฿1,520)</option><option value="9">9 กก. (฿1,710)</option><option value="10">10 กก. (฿1,900)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={snapperDelivery} onChange={(e) => setSnapperDelivery(e.target.value)}><option value="น็อคน้ำแข็ง (แบบแช่แข็ง)">น็อคน้ำแข็ง (แบบแช่แข็ง)</option><option value="รถออกซิเจน (แบบเป็นๆ)">รถออกซิเจน (แบบเป็นๆ)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (ตัว):</label><input type="number" min="1" max={stockSnapper} value={snapperQty} onChange={(e) => setSnapperQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('ปลากระพงขาว', snapperSize, snapperDelivery, snapperQty, 'ตัว', stockSnapper)} disabled={stockSnapper <= 0} style={stockSnapper <= 0 ? disabledBtnStyle : {}}>{stockSnapper <= 0 ? '❌ สินค้าหมด' : `ใส่ตะกร้า (฿${PRICING['ปลากระพงขาว'][snapperSize].toLocaleString()})`}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>หอยเชลล์</h3> <span style={{ color: stockScallop > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockScallop} กก.</span></div>
+                                        <div className="form-group"><label>ขนาด:</label><select value={scallopSize} onChange={(e) => setScallopSize(e.target.value)}><option value="เล็ก">เล็ก (฿350)</option><option value="กลาง">กลาง (฿450)</option><option value="ใหญ่">ใหญ่ (฿600)</option><option value="จัมโบ้">จัมโบ้ (฿800)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={scallopDelivery} onChange={(e) => setScallopDelivery(e.target.value)}><option value="แช่แข็ง (ทำความสะอาดแล้ว)">แช่แข็ง (ทำความสะอาดแล้ว)</option><option value="แพ็คออกซิเจน (แบบเป็นๆ)">แพ็คออกซิเจน (แบบเป็นๆ)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (กก.):</label><input type="number" min="1" max={stockScallop} value={scallopQty} onChange={(e) => setScallopQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('หอยเชลล์', scallopSize, scallopDelivery, scallopQty, 'กก.', stockScallop)} disabled={stockScallop <= 0} style={stockScallop <= 0 ? disabledBtnStyle : {}}>{stockScallop <= 0 ? '❌ สินค้าหมด' : `ใส่ตะกร้า (฿${PRICING['หอยเชลล์'][scallopSize].toLocaleString()})`}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>หอยแครง</h3> <span style={{ color: stockCockle > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockCockle} กก.</span></div>
+                                        <div className="form-group"><label>ขนาด:</label><select value={cockleSize} onChange={(e) => setCockleSize(e.target.value)}><option value="เล็ก">เล็ก (฿120)</option><option value="กลาง">กลาง (฿150)</option><option value="ใหญ่">ใหญ่ (฿180)</option><option value="คัดพิเศษ">คัดพิเศษ (฿220)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={cockleDelivery} onChange={(e) => setCockleDelivery(e.target.value)}><option value="แพ็คออกซิเจน (แบบเป็นๆ)">แพ็คออกซิเจน (แบบเป็นๆ)</option><option value="น็อคน้ำแข็ง (แบบแช่แข็ง)">น็อคน้ำแข็ง (แบบแช่แข็ง)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (กก.):</label><input type="number" min="1" max={stockCockle} value={cockleQty} onChange={(e) => setCockleQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('หอยแครง', cockleSize, cockleDelivery, cockleQty, 'กก.', stockCockle)} disabled={stockCockle <= 0} style={stockCockle <= 0 ? disabledBtnStyle : {}}>{stockCockle <= 0 ? '❌ สินค้าหมด' : `ใส่ตะกร้า (฿${PRICING['หอยแครง'][cockleSize].toLocaleString()})`}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>ปลาหมึกกล้วย</h3> <span style={{ color: stockSquid > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockSquid} กก.</span></div>
+                                        <div className="form-group"><label>ขนาด (ไซส์):</label><select value={squidSize} onChange={(e) => setSquidSize(e.target.value)}><option value="ใหญ่">ใหญ่ (3-4 ตัว/กก.) (฿280)</option><option value="กลาง">กลาง (5-6 ตัว/กก.) (฿220)</option><option value="เล็ก">เล็ก (10-15 ตัว/กก.) (฿150)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={squidDelivery} onChange={(e) => setSquidDelivery(e.target.value)}><option value="น็อคน้ำแข็ง (แบบแช่แข็ง)">น็อคน้ำแข็ง (แบบแช่แข็ง)</option><option value="แพ็คออกซิเจน (แบบเป็นๆ)">แพ็คออกซิเจน (แบบเป็นๆ)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (กก.):</label><input type="number" min="1" max={stockSquid} value={squidQty} onChange={(e) => setSquidQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('ปลาหมึกกล้วย', squidSize, squidDelivery, squidQty, 'กก.', stockSquid)} disabled={stockSquid <= 0} style={stockSquid <= 0 ? disabledBtnStyle : {}}>{stockSquid <= 0 ? '❌ สินค้าหมด' : `ใส่ตะกร้า (฿${PRICING['ปลาหมึกกล้วย'][squidSize].toLocaleString()})`}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>ปูม้า</h3> <span style={{ color: stockBlueCrab > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockBlueCrab} กก.</span></div>
+                                        <div className="form-group"><label>ขนาด (ไซส์):</label><select value={blueCrabSize} onChange={(e) => setBlueCrabSize(e.target.value)}><option value="ใหญ่">ใหญ่ (3-4 ตัว/กก.) (฿550)</option><option value="กลาง">กลาง (5-6 ตัว/กก.) (฿450)</option><option value="เล็ก">เล็ก (7-8 ตัว/กก.) (฿350)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={blueCrabDelivery} onChange={(e) => setBlueCrabDelivery(e.target.value)}><option value="แพ็คออกซิเจน (แบบเป็นๆ)">แพ็คออกซิเจน (แบบเป็นๆ)</option><option value="น็อคน้ำแข็ง (แบบแช่แข็ง)">น็อคน้ำแข็ง (แบบแช่แข็ง)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (กก.):</label><input type="number" min="1" max={stockBlueCrab} value={blueCrabQty} onChange={(e) => setBlueCrabQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('ปูม้า', blueCrabSize, blueCrabDelivery, blueCrabQty, 'กก.', stockBlueCrab)} disabled={stockBlueCrab <= 0} style={stockBlueCrab <= 0 ? disabledBtnStyle : {}}>{stockBlueCrab <= 0 ? '❌ สินค้าหมด' : `ใส่ตะกร้า (฿${PRICING['ปูม้า'][blueCrabSize].toLocaleString()})`}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>หอยนางรมสุราษฎร์</h3> <span style={{ color: stockOyster > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockOyster} ตัว</span></div>
+                                        <div className="form-group"><label>ขนาด (ไซส์):</label><select value={oysterSize} onChange={(e) => setOysterSize(e.target.value)}><option value="จัมโบ้">จัมโบ้ (฿80)</option><option value="ใหญ่">ใหญ่ (฿60)</option><option value="กลาง">กลาง (฿45)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={oysterDelivery} onChange={(e) => setOysterDelivery(e.target.value)}><option value="น็อคน้ำแข็ง (แบบแช่แข็ง)">น็อคน้ำแข็ง (แบบแช่แข็ง)</option><option value="แพ็คออกซิเจน (แบบเป็นๆ)">แพ็คออกซิเจน (แบบเป็นๆ)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (ตัว):</label><input type="number" min="1" max={stockOyster} value={oysterQty} onChange={(e) => setOysterQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('หอยนางรมสุราษฎร์', oysterSize, oysterDelivery, oysterQty, 'ตัว', stockOyster)} disabled={stockOyster <= 0} style={stockOyster <= 0 ? disabledBtnStyle : {}}>{stockOyster <= 0 ? '❌ สินค้าหมด' : `ใส่ตะกร้า (฿${PRICING['หอยนางรมสุราษฎร์'][oysterSize].toLocaleString()}/ตัว)`}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>กุ้งแชบ๊วย</h3> <span style={{ color: stockBananaShrimp > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockBananaShrimp} กก.</span></div>
+                                        <div className="form-group"><label>ขนาด (ไซส์):</label><select value={bananaShrimpSize} onChange={(e) => setBananaShrimpSize(e.target.value)}><option value="ใหญ่">ใหญ่ (20 ตัว/กก.) (฿450)</option><option value="กลาง">กลาง (30 ตัว/กก.) (฿350)</option><option value="เล็ก">เล็ก (40 ตัว/กก.) (฿250)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={bananaShrimpDelivery} onChange={(e) => setBananaShrimpDelivery(e.target.value)}><option value="น็อคน้ำแข็ง (แบบแช่แข็ง)">น็อคน้ำแข็ง (แบบแช่แข็ง)</option><option value="แพ็คออกซิเจน (แบบเป็นๆ)">แพ็คออกซิเจน (แบบเป็นๆ)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (กก.):</label><input type="number" min="1" max={stockBananaShrimp} value={bananaShrimpQty} onChange={(e) => setBananaShrimpQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('กุ้งแชบ๊วย', bananaShrimpSize, bananaShrimpDelivery, bananaShrimpQty, 'กก.', stockBananaShrimp)} disabled={stockBananaShrimp <= 0} style={stockBananaShrimp <= 0 ? disabledBtnStyle : {}}>{stockBananaShrimp <= 0 ? '❌ สินค้าหมด' : `ใส่ตะกร้า (฿${PRICING['กุ้งแชบ๊วย'][bananaShrimpSize].toLocaleString()})`}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>แมงดาทะเลไข่</h3> <span style={{ color: stockHorseshoeCrab > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockHorseshoeCrab} ตัว</span></div>
+                                        <div className="form-group"><label>ขนาด (ไซส์):</label><select value={horseshoeCrabSize} onChange={(e) => setHorseshoeCrabSize(e.target.value)}><option value="ใหญ่">ใหญ่ (฿400)</option><option value="กลาง">กลาง (฿300)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={horseshoeCrabDelivery} onChange={(e) => setHorseshoeCrabDelivery(e.target.value)}><option value="น็อคน้ำแข็ง (แบบแช่แข็ง)">น็อคน้ำแข็ง (แบบแช่แข็ง)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (ตัว):</label><input type="number" min="1" max={stockHorseshoeCrab} value={horseshoeCrabQty} onChange={(e) => setHorseshoeCrabQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('แมงดาทะเลไข่', horseshoeCrabSize, horseshoeCrabDelivery, horseshoeCrabQty, 'ตัว', stockHorseshoeCrab)} disabled={stockHorseshoeCrab <= 0} style={stockHorseshoeCrab <= 0 ? disabledBtnStyle : {}}>{stockHorseshoeCrab <= 0 ? '❌ สินค้าหมด' : `ใส่ตะกร้า (฿${PRICING['แมงดาทะเลไข่'][horseshoeCrabSize].toLocaleString()}/ตัว)`}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>ปลาแซลมอนสดทั้งตัว</h3> <span style={{ color: stockSalmon > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockSalmon} ตัว</span></div>
+                                        <div className="form-group"><label>ขนาด:</label><select disabled><option>5 กิโลกรัม / ตัว (฿2,500)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={salmonDelivery} onChange={(e) => setSalmonDelivery(e.target.value)}><option value="น็อคน้ำแข็ง (แบบแช่แข็ง)">น็อคน้ำแข็ง (แบบแช่แข็ง)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (ตัว):</label><input type="number" min="1" max={stockSalmon} value={salmonQty} onChange={(e) => setSalmonQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('ปลาแซลมอน', '5kg', salmonDelivery, salmonQty, 'ตัว', stockSalmon)} disabled={stockSalmon <= 0} style={stockSalmon <= 0 ? disabledBtnStyle : {}}>{stockSalmon <= 0 ? '❌ สินค้าหมด' : 'ใส่ตะกร้า (฿2,500/ตัว)'}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>ปูทาราบะยักษ์</h3> <span style={{ color: stockKingCrab > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockKingCrab} ตัว</span></div>
+                                        <div className="form-group"><label>ขนาด:</label><select disabled><option>3 กิโลกรัม / ตัว (฿8,900)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={kingCrabDelivery} onChange={(e) => setKingCrabDelivery(e.target.value)}><option value="แพ็คออกซิเจน (แบบเป็นๆ)">แพ็คออกซิเจน (แบบเป็นๆ)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (ตัว):</label><input type="number" min="1" max={stockKingCrab} value={kingCrabQty} onChange={(e) => setKingCrabQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('ปูทาราบะ', '3kg', kingCrabDelivery, kingCrabQty, 'ตัว', stockKingCrab)} disabled={stockKingCrab <= 0} style={stockKingCrab <= 0 ? disabledBtnStyle : {}}>{stockKingCrab <= 0 ? '❌ สินค้าหมด' : 'ใส่ตะกร้า (฿8,900/ตัว)'}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>กุ้งมังกรเจ็ดสี</h3> <span style={{ color: stockSevenLobster > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockSevenLobster} ตัว</span></div>
+                                        <div className="form-group"><label>ขนาด:</label><select disabled><option>2.5 กิโลกรัม / ตัว (฿5,500)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={sevenLobsterDelivery} onChange={(e) => setSevenLobsterDelivery(e.target.value)}><option value="แพ็คออกซิเจน (แบบเป็นๆ)">แพ็คออกซิเจน (แบบเป็นๆ)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (ตัว):</label><input type="number" min="1" max={stockSevenLobster} value={sevenLobsterQty} onChange={(e) => setSevenLobsterQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('กุ้งมังกรเจ็ดสี', '2.5kg', sevenLobsterDelivery, sevenLobsterQty, 'ตัว', stockSevenLobster)} disabled={stockSevenLobster <= 0} style={stockSevenLobster <= 0 ? disabledBtnStyle : {}}>{stockSevenLobster <= 0 ? '❌ สินค้าหมด' : 'ใส่ตะกร้า (฿5,500/ตัว)'}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>ปลาหิมะทั้งตัว</h3> <span style={{ color: stockSnowFish > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockSnowFish} ตัว</span></div>
+                                        <div className="form-group"><label>ขนาด:</label><select disabled><option>4 กิโลกรัม / ตัว (฿4,800)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={snowFishDelivery} onChange={(e) => setSnowFishDelivery(e.target.value)}><option value="น็อคน้ำแข็ง (แบบแช่แข็ง)">น็อคน้ำแข็ง (แบบแช่แข็ง)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (ตัว):</label><input type="number" min="1" max={stockSnowFish} value={snowFishQty} onChange={(e) => setSnowFishQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('ปลาหิมะ', '4kg', snowFishDelivery, snowFishQty, 'ตัว', stockSnowFish)} disabled={stockSnowFish <= 0} style={stockSnowFish <= 0 ? disabledBtnStyle : {}}>{stockSnowFish <= 0 ? '❌ สินค้าหมด' : 'ใส่ตะกร้า (฿4,800/ตัว)'}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>หอยเป๋าฮื้อสด</h3> <span style={{ color: stockAbalone > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockAbalone} กก.</span></div>
+                                        <div className="form-group"><label>ขนาด:</label><select disabled><option>1 กิโลกรัม (฿2,200)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={abaloneDelivery} onChange={(e) => setAbaloneDelivery(e.target.value)}><option value="แพ็คออกซิเจน (แบบเป็นๆ)">แพ็คออกซิเจน (แบบเป็นๆ)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (กก.):</label><input type="number" min="1" max={stockAbalone} value={abaloneQty} onChange={(e) => setAbaloneQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('หอยเป๋าฮื้อสด', '1kg', abaloneDelivery, abaloneQty, 'กก.', stockAbalone)} disabled={stockAbalone <= 0} style={stockAbalone <= 0 ? disabledBtnStyle : {}}>{stockAbalone <= 0 ? '❌ สินค้าหมด' : 'ใส่ตะกร้า (฿2,200/กก.)'}</button>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}><h3>ปูจั๊กจั่นสด</h3> <span style={{ color: stockFrogCrab > 0 ? '#26dec0' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockFrogCrab} กก.</span></div>
+                                        <div className="form-group"><label>ขนาด:</label><select disabled><option>1 กิโลกรัม (฿650)</option></select></div>
+                                        <div className="form-group"><label>จัดส่ง:</label><select value={frogCrabDelivery} onChange={(e) => setFrogCrabDelivery(e.target.value)}><option value="น็อคน้ำแข็ง (แบบแช่แข็ง)">น็อคน้ำแข็ง (แบบแช่แข็ง)</option></select></div>
+                                        <div className="form-group"><label>จำนวน (กก.):</label><input type="number" min="1" max={stockFrogCrab} value={frogCrabQty} onChange={(e) => setFrogCrabQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('ปูจั๊กจั่น', '1kg', frogCrabDelivery, frogCrabQty, 'กก.', stockFrogCrab)} disabled={stockFrogCrab <= 0} style={stockFrogCrab <= 0 ? disabledBtnStyle : {}}>{stockFrogCrab <= 0 ? '❌ สินค้าหมด' : 'ใส่ตะกร้า (฿650/กก.)'}</button>
+                                    </div>
+
+                                    {/* 👑 18. ปลาเก๋ายักษ์ 2 ขนาดใหม่พิเศษ */}
+                                    <div className="product-card special-item">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <h3 style={{ color: '#ffd700', margin: 0 }}>👑 ปลาเก๋ายักษ์</h3> 
+                                            <span style={{ color: stockGiantGrouper > 0 ? '#ffd700' : '#ec4899', fontWeight: 'bold' }}>เหลือ: {stockGiantGrouper} ตัว</span>
+                                        </div>
+                                        <p style={{ color: '#fff', fontWeight: 'bold', marginTop: '10px' }}>🔥 สินค้าแรร์ระดับพรีเมียม! เลือกขนาดได้</p>
+                                        
+                                        <div className="form-group">
+                                            <label style={{ color: '#ffd700' }}>เลือกขนาดน้ำหนัก:</label>
+                                            <select value={giantGrouperSize} onChange={(e) => setGiantGrouperSize(e.target.value)}>
+                                                <option value="150kg">ตัวที่ 1: 150 กก. (฿109,000)</option>
+                                                <option value="320kg">ตัวที่ 2: 320 กก. (฿351,000)</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="form-group"><label style={{ color: '#ffd700' }}>การจัดส่งพิเศษ:</label><select value={giantGrouperDelivery} onChange={(e) => setGiantGrouperDelivery(e.target.value)}><option value="รถออกซิเจนพิเศษ (แบบเป็นๆ)">รถออกซิเจนคุมอุณหภูมิพิเศษ (เป็นๆ)</option></select></div>
+                                        <div className="form-group"><label style={{ color: '#ffd700' }}>จำนวน (ตัว):</label><input type="number" min="1" max={stockGiantGrouper} value={giantGrouperQty} onChange={(e) => setGiantGrouperQty(e.target.value)} /></div>
+                                        <button onClick={() => handleAddToCart('ปลาเก๋ายักษ์', giantGrouperSize, giantGrouperDelivery, giantGrouperQty, 'ตัว', stockGiantGrouper)} disabled={stockGiantGrouper <= 0} className="btn-special" style={stockGiantGrouper <= 0 ? disabledBtnStyle : {}}>{stockGiantGrouper <= 0 ? '❌ สินค้าหมด' : `🛒 สั่งซื้อ (฿${PRICING['ปลาเก๋ายักษ์'][giantGrouperSize].toLocaleString()})`}</button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ======================= 2. ตะกร้าสินค้า ======================= */}
+                        {activeTab === 'cart' && (
+                            <div className="section">
+                                <h1 className="header-title">🛍️ ตะกร้าสินค้าของคุณ</h1>
+                                <div className="tracking-box" style={{ maxWidth: '100%' }}>
+                                    {cart.length === 0 ? <p style={{textAlign:'center', color:'#8b949e'}}>ไม่มีสินค้าในตะกร้า</p> : (
+                                        <>
+                                            <table>
+                                                <thead><tr><th>สินค้า</th><th>ราคาต่อหน่วย</th><th>จำนวน</th><th>รวม (บาท)</th><th>จัดการ</th></tr></thead>
+                                                <tbody>
+                                                    {cart.map(item => (
+                                                        <tr key={item.id}><td>{item.product} ({item.sizeKey})</td><td>฿{item.pricePerUnit.toLocaleString()}</td><td>{item.qty} {item.unit}</td><td style={{color:'#26dec0', fontWeight:'bold'}}>฿{item.total.toLocaleString()}</td>
+                                                        <td><button onClick={() => handleRemoveFromCart(item.id)} style={{background:'transparent', color:'#ec4899', border:'1px solid #ec4899', margin:0, padding:'5px 10px'}}>ลบ</button></td></tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                            <h2 style={{color:'#26dec0', textAlign:'right', marginTop:'20px'}}>ยอดรวมเบื้องต้น: ฿{cartTotalAmount.toLocaleString()}</h2>
+                                            <button onClick={goToCheckout} style={{background:'#26dec0', color:'#000', fontSize:'1.2rem', padding:'15px'}}>👉 ดำเนินการชำระเงิน (Checkout)</button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ======================= 3. Checkout ======================= */}
+                        {activeTab === 'checkout' && (
+                            <div className="section">
+                                <h1 className="header-title">💳 ตรวจสอบและชำระเงิน</h1>
+                                <div className="shop-grid">
+                                    <div className="product-card" style={{ gridColumn: '1 / -1' }}>
+                                        <h3>1. สรุปรายการสินค้า</h3>
+                                        <ul style={{ listStyleType: 'none', padding: 0 }}>
+                                            {cart.map(item => <li key={item.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><span>{item.qty} {item.unit} x {item.product} ({item.sizeKey})</span><span>฿{item.total.toLocaleString()}</span></li>)}
+                                        </ul>
+                                        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                                            <input type="text" placeholder="กรอกโค้ดส่วนลด (เช่น MEGA99)" value={promoCodeInput} onChange={(e) => setPromoCodeInput(e.target.value)} style={{ flex: 1 }}/>
+                                            <button onClick={applyPromoCode} style={{ width: 'auto', margin: 0 }}>ใช้โค้ด</button>
+                                        </div>
+                                        {discountPercent > 0 && <p style={{color:'#f53844', textAlign:'right'}}>ส่วนลด ({discountPercent}%): -฿{discountAmount.toLocaleString()}</p>}
+                                        <h2 style={{color:'#26dec0', textAlign:'right'}}>ยอดสุทธิที่ต้องชำระ: ฿{finalTotalAmount.toLocaleString()}</h2>
+                                    </div>
+                                    
+                                    <div className="product-card">
+                                        <h3>2. ข้อมูลจัดส่ง</h3>
+                                        <input type="text" placeholder="ชื่อผู้รับ" value={customerName} onChange={e => setCustomerName(e.target.value)} style={{marginBottom:'10px'}}/>
+                                        <input type="text" placeholder="เบอร์โทร" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} style={{marginBottom:'10px'}}/>
+                                        <input type="text" placeholder="ที่อยู่จัดส่ง" value={customerAddress} onChange={e => setCustomerAddress(e.target.value)}/>
+                                    </div>
+
+                                    <div className="product-card">
+                                        <h3>3. ชำระเงิน</h3>
+                                        <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
+                                            <option value="cod">🚚 เก็บเงินปลายทาง</option>
+                                            <option value="bank">🏦 โอนผ่านธนาคาร</option>
+                                            <option value="qr">📱 สแกน QR Code</option>
+                                        </select>
+                                        <div style={{ background: '#0a0d14', padding: '15px', borderRadius: '8px', border: '1px solid #263040', marginTop: '15px', textAlign:'center', minHeight:'100px' }}>
+                                            {paymentMethod === 'cod' && <p>เตรียมเงินสด <b style={{ color: '#26dec0' }}>฿{finalTotalAmount.toLocaleString()}</b> รอจ่ายพนักงาน</p>}
+                                            {paymentMethod === 'bank' && <><p>ธ.กสิกรไทย</p><h2 style={{ color: '#26dec0' }}>012-3-45678-9</h2></>}
+                                            {paymentMethod === 'qr' && <p>[ สแกน QR Code เพื่อชำระเงิน ]</p>}
+                                        </div>
+                                        <button onClick={handleConfirmOrder} style={{ background: '#26dec0', color: '#000', fontSize: '1.1rem' }}>✅ ยืนยันการสั่งซื้อ</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ======================= 4. สต็อกเข้า-ออก ======================= */}
+                        {activeTab === 'records' && (
+                            <div className="section">
+                                <h1 className="header-title">📝 ระบบบันทึก: นำเข้า และ ขายออก</h1>
+                                <div className="dashboard-cards">
+                                    <div className="card bg-green"><h3>นำเข้าทั้งหมด</h3><p>{totalImported.toLocaleString()} ชิ้น/กก.</p></div>
+                                    <div className="card bg-orange"><h3>ขายออกทั้งหมด</h3><p>{totalSoldQty.toLocaleString()} ชิ้น/กก.</p></div>
+                                    <div className="card bg-blue"><h3>ยอดขายรวม</h3><p>฿{totalRevenue.toLocaleString()}</p></div>
+                                </div>
+                                <div className="tracking-box">
+                                    <h3 style={{marginTop: 0}}>ฟอร์มบันทึกสต็อก</h3>
+                                    <select value={recordType} onChange={e => setRecordType(e.target.value)} style={{marginBottom:'15px'}}>
+                                        <option value="in">📥 นำเข้า (IN)</option>
+                                        <option value="out">📤 ขายออก (OUT)</option>
+                                    </select>
+                                    <select value={recordProduct} onChange={e => setRecordProduct(e.target.value)} style={{marginBottom:'15px'}}>
+                                        <option value="กุ้งก้ามกราม">กุ้งก้ามกราม</option>
+                                        <option value="ปูดำ/ปูทะเล">ปูดำ/ปูทะเล</option>
+                                        <option value="กุ้งมังกร">กุ้งมังกร</option>
+                                        <option value="ปลากระพงขาว">ปลากระพงขาว</option>
+                                        <option value="หอยเชลล์">หอยเชลล์</option>
+                                        <option value="หอยแครง">หอยแครง</option>
+                                        <option value="ปลาหมึกกล้วย">ปลาหมึกกล้วย</option>
+                                        <option value="ปูม้า">ปูม้า</option>
+                                        <option value="หอยนางรมสุราษฎร์">หอยนางรมสุราษฎร์</option>
+                                        <option value="กุ้งแชบ๊วย">กุ้งแชบ๊วย</option>
+                                        <option value="แมงดาทะเลไข่">แมงดาทะเลไข่</option>
+                                        <option value="ปลาแซลมอน">ปลาแซลมอน</option>
+                                        <option value="ปูทาราบะ">ปูทาราบะ</option>
+                                        <option value="กุ้งมังกรเจ็ดสี">กุ้งมังกรเจ็ดสี</option>
+                                        <option value="ปลาหิมะ">ปลาหิมะ</option>
+                                        <option value="หอยเป๋าฮื้อสด">หอยเป๋าฮื้อสด</option>
+                                        <option value="ปูจั๊กจั่น">ปูจั๊กจั่น</option>
+                                        <option value="ปลาเก๋ายักษ์">ปลาเก๋ายักษ์</option>
+                                    </select>
+                                    <input type="number" placeholder="จำนวน (ตัว/กก.)" value={recordQty} onChange={e => setRecordQty(e.target.value)} style={{marginBottom:'15px'}}/>
+                                    {recordType === 'out' && <input type="number" placeholder="ราคาขายรวม (บาท)" value={recordPrice} onChange={e => setRecordPrice(e.target.value)} style={{marginBottom:'15px'}}/>}
+                                    <button onClick={handleSaveRecord}>บันทึกข้อมูล</button>
+                                </div>
+
+                                <h3 style={{marginTop: '40px'}}>ประวัติการทำรายการล่าสุด</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>วันที่</th>
+                                            <th>ประเภท</th>
+                                            <th>สินค้า</th>
+                                            <th>จำนวน</th>
+                                            <th>ยอดเงิน (บาท)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {recordsList.length === 0 ? (
+                                            <tr><td colSpan="5" style={{ textAlign: 'center' }}>ยังไม่มีข้อมูลการบันทึก</td></tr>
+                                        ) : (
+                                            recordsList.slice(0).reverse().map((record) => (
+                                                <tr key={record.id}>
+                                                    <td>{record.date}</td>
+                                                    <td>
+                                                        {record.type === 'in' 
+                                                            ? <span className="badge badge-success">📥 นำเข้า</span> 
+                                                            : <span className="badge badge-warning">📤 ขายออก</span>
+                                                        }
+                                                    </td>
+                                                    <td>{record.product}</td>
+                                                    <td>{record.qty}</td>
+                                                    <td style={{ color: record.type === 'out' ? '#26dec0' : '#e2e8f0' }}>
+                                                        {record.price !== '-' ? `฿${Number(record.price).toLocaleString()}` : '-'}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                        
+                        {/* ======================= 5. เช็คจำนวนคำสั่งซื้อ (Orders) ======================= */}
+                        {activeTab === 'orders' && (
+                            <div className="section">
+                                <h1 className="header-title">📦 แดชบอร์ด: สรุปคำสั่งซื้อวันนี้</h1>
+                                <div className="dashboard-cards">
+                                    <div className="card bg-green"><h3>คำสั่งซื้อทั้งหมด</h3><p>1,250 กก.</p></div>
+                                    <div className="card bg-orange"><h3>รอแพ็ค (แบบเป็นๆ)</h3><p>430 กก.</p></div>
+                                    <div className="card bg-blue"><h3>รอแพ็ค (แช่แข็ง)</h3><p>820 กก.</p></div>
+                                    <div className="card bg-pink"><h3>รอดำเนินการจัดส่ง</h3><p>15 ออเดอร์</p></div>
+                                </div>
+                                
+                                <h3>รายการออเดอร์ล่าสุด</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>รหัสคำสั่งซื้อ</th>
+                                            <th>ลูกค้า</th>
+                                            <th>ยอดรวม</th>
+                                            <th>สถานะ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>ORD-001</td>
+                                            <td>คุณ สมชาย</td>
+                                            <td>฿2,500</td>
+                                            <td><span className="badge badge-warning">รอจัดเตรียม</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>ORD-002</td>
+                                            <td>คุณ สมหญิง</td>
+                                            <td>฿14,500</td>
+                                            <td><span className="badge badge-success">พร้อมส่ง</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>ORD-003</td>
+                                            <td>บจก. ซีฟู้ดไทย</td>
+                                            <td>฿351,000</td>
+                                            <td><span className="badge badge-info">กำลังจัดส่ง</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        {/* ======================= 6. เช็คสถานะขนส่ง (Tracking) ======================= */}
+                        {activeTab === 'tracking' && (
+                            <div className="section">
+                                <h1 className="header-title">🚚 ระบบติดตามการขนส่ง (Tracking)</h1>
+                                <div className="tracking-box">
+                                    <div className="form-group">
+                                        <label>กรอกรหัสคำสั่งซื้อ หรือ เลขพัสดุ:</label>
+                                        <input type="text" placeholder="เช่น ORD-001" value={trackId} onChange={(e) => setTrackId(e.target.value)}/>
+                                    </div>
+                                    <button onClick={handleTrackOrder}>ตรวจสอบสถานะ</button>
+                                    
+                                    {trackingStatus && (
+                                        <div style={{ marginTop: '30px', padding: '20px', background: 'rgba(38, 222, 192, 0.05)', borderRadius: '12px', border: '1px solid #26dec0' }}>
+                                            <h3 style={{ color: '#26dec0', marginTop: 0, borderBottom: '1px dashed #263040', paddingBottom: '10px' }}>สถานะพัสดุ: {trackId}</h3>
+                                            
+                                            <ul style={{ listStyle: 'none', padding: 0, margin: 0, position: 'relative' }}>
+                                                <li style={{ paddingLeft: '25px', borderLeft: '2px solid #26dec0', paddingBottom: '20px', position: 'relative' }}>
+                                                    <span style={{ position: 'absolute', left: '-7px', top: '0', width: '12px', height: '12px', background: '#26dec0', borderRadius: '50%', boxShadow: '0 0 10px #26dec0' }}></span>
+                                                    <div style={{ color: '#fff', fontWeight: 'bold' }}>จัดส่งออกจากฟาร์มแล้ว</div>
+                                                    <div style={{ fontSize: '0.85rem', color: '#8b949e', marginTop: '5px' }}>วันนี้ 08:30 น. - รถควบคุมอุณหภูมิ 4°C (ขนส่งร่วมห้องเย็น)</div>
+                                                </li>
+                                                <li style={{ paddingLeft: '25px', borderLeft: '2px solid #263040', paddingBottom: '20px', position: 'relative' }}>
+                                                    <span style={{ position: 'absolute', left: '-7px', top: '0', width: '12px', height: '12px', background: '#263040', borderRadius: '50%' }}></span>
+                                                    <div style={{ color: '#8b949e' }}>กำลังนำส่งถึงปลายทาง</div>
+                                                </li>
+                                                <li style={{ paddingLeft: '25px', position: 'relative' }}>
+                                                    <span style={{ position: 'absolute', left: '-7px', top: '0', width: '12px', height: '12px', background: '#263040', borderRadius: '50%' }}></span>
+                                                    <div style={{ color: '#8b949e' }}>พัสดุจัดส่งสำเร็จ</div>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
