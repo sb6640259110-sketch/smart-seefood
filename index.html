@@ -11,9 +11,6 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        /* =========================================
-           ส่วนที่ 1: ตกแต่งความสวยงาม (CSS Dark Mode)
-           ========================================= */
         :root {
             --bg-main: #0a0d14;         
             --bg-card: #131823;         
@@ -44,7 +41,6 @@
         .product-card h3 { margin-top: 0; color: var(--text-main); font-size: 1.3rem; margin-bottom: 5px; }
         .product-card p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 25px; }
         
-        /* การ์ดพิเศษสำหรับปลาเก๋ายักษ์ */
         .product-card.special-item {
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(19, 24, 35, 1) 100%);
             border: 2px solid var(--accent-gold);
@@ -57,8 +53,8 @@
 
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; color: var(--text-muted); }
-        select, input[type="text"], input[type="number"], input[type="date"] { width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-size: 1rem; color: var(--text-main); background-color: var(--bg-main); color-scheme: dark; }
-        select:focus, input:focus { outline: none; border-color: var(--accent-cyan); }
+        select, input[type="text"], input[type="number"], input[type="date"], textarea { width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-size: 1rem; color: var(--text-main); background-color: var(--bg-main); color-scheme: dark; }
+        select:focus, input:focus, textarea:focus { outline: none; border-color: var(--accent-cyan); }
         
         button { background-color: rgba(38, 222, 192, 0.05); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); padding: 14px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.05rem; transition: 0.2s; margin-top: 10px; }
         button:hover:not(:disabled) { background-color: var(--accent-cyan); color: #000; box-shadow: 0 0 12px rgba(38, 222, 192, 0.3); }
@@ -94,15 +90,18 @@
         .badge-warning { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid #f59e0b; }
         .badge-success { background: rgba(38, 222, 192, 0.15); color: #26dec0; border: 1px solid #26dec0; }
         .badge-info { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid #3b82f6; }
+        
+        /* สไตล์สำหรับกราฟแท่งจำลอง */
+        .chart-container { display: flex; align-items: flex-end; gap: 15px; height: 200px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--border-color); margin-top: 20px; }
+        .chart-bar-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+        .chart-bar { width: 100%; background: var(--accent-cyan); border-radius: 4px 4px 0 0; transition: 0.5s; }
+        .chart-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; text-align: center; }
     </style>
 </head>
 <body>
     
     <div id="root"></div>
 
-    <!-- =========================================
-         ส่วนที่ 2: ระบบการทำงาน (React / JavaScript)
-         ========================================= -->
     <script type="text/babel">
         const { useState } = React;
 
@@ -124,7 +123,6 @@
             'ปลาหิมะ': { '4kg': 4800 },
             'หอยเป๋าฮื้อสด': { '1kg': 2200 },
             'ปูจั๊กจั่น': { '1kg': 650 },
-            // อัปเดตปลาเก๋ายักษ์ 2 ขนาดตามสั่ง
             'ปลาเก๋ายักษ์': { '150kg': 109000, '320kg': 351000 }
         };
 
@@ -151,7 +149,45 @@
             const [customerAddress, setCustomerAddress] = useState('');
             const [paymentMethod, setPaymentMethod] = useState('cod'); 
 
-            // --- State สินค้า ---
+            // --- State รีวิวจากลูกค้า ---
+            const [reviews, setReviews] = useState([
+                { id: 1, name: 'คุณสมชาย ใจดี', rating: 5, comment: 'กุ้งสดมาก ส่งไว แพ็คออกซิเจนมาอย่างดีเยี่ยมครับ', date: '2026-06-01' },
+                { id: 2, name: 'คุณแอนนา', rating: 4, comment: 'ปูทะเลเนื้อแน่น หวานอร่อยมากค่ะ', date: '2026-06-02' }
+            ]);
+            const [newReviewName, setNewReviewName] = useState('');
+            const [newReviewRating, setNewReviewRating] = useState(5);
+            const [newReviewComment, setNewReviewComment] = useState('');
+
+            // --- State สถิติผู้ใช้งานรายวัน & การเก็บข้อมูล 2 เดือน ---
+            const [dailyUsers, setDailyUsers] = useState([
+                { day: 'วันจันทร์', users: 145 },
+                { day: 'วันอังคาร', users: 190 },
+                { day: 'วันพุธ', users: 230 },
+                { day: 'วันพฤหัสบดี', users: 210 },
+                { day: 'วันศุกร์', users: 340 },
+                { day: 'วันเสาร์', users: 450 },
+                { day: 'วันอาทิตย์', users: 380 }
+            ]);
+            const [dataRetentionDays, setDataRetentionDays] = useState(60); // กำหนด 2 เดือน (ประมาณ 60 วัน)
+
+            // ฟังก์ชันรีเซ็ตข้อมูลสถิติ
+            const handleResetAnalytics = () => {
+                if (confirm('คุณต้องการรีเซ็ตข้อมูลสถิติและประวัติทั้งหมดเพื่อเริ่มรอบใหม่ใช่หรือไม่?')) {
+                    setRecordsList([]);
+                    setDailyUsers([
+                        { day: 'วันจันทร์', users: 0 },
+                        { day: 'วันอังคาร', users: 0 },
+                        { day: 'วันพุธ', users: 0 },
+                        { day: 'วันพฤหัสบดี', users: 0 },
+                        { day: 'วันศุกร์', users: 0 },
+                        { day: 'วันเสาร์', users: 0 },
+                        { day: 'วันอาทิตย์', users: 0 }
+                    ]);
+                    alert('✅ รีเซ็ตข้อมูลเรียบร้อยแล้ว (รอบเก็บข้อมูล 2 เดือนถูกเริ่มใหม่)');
+                }
+            };
+
+            // --- State สินค้าทั้งหมด 18 รายการ ---
             const [shrimpSize, setShrimpSize] = useState('10');
             const [shrimpDelivery, setShrimpDelivery] = useState('แพ็คออกซิเจน (แบบเป็นๆ)');
             const [shrimpQty, setShrimpQty] = useState(1);
@@ -214,7 +250,6 @@
             const [frogCrabDelivery, setFrogCrabDelivery] = useState('น็อคน้ำแข็ง (แบบแช่แข็ง)');
             const [frogCrabQty, setFrogCrabQty] = useState(1);
 
-            // State สำหรับปลาเก๋ายักษ์ (เลือกขนาด 150kg หรือ 320kg)
             const [giantGrouperSize, setGiantGrouperSize] = useState('150kg');
             const [giantGrouperDelivery, setGiantGrouperDelivery] = useState('รถออกซิเจนพิเศษ (แบบเป็นๆ)');
             const [giantGrouperQty, setGiantGrouperQty] = useState(1);
@@ -277,6 +312,16 @@
             const stockFrogCrab = getAvailableStock('ปูจั๊กจั่น');
             const stockGiantGrouper = getAvailableStock('ปลาเก๋ายักษ์');
 
+            // --- คำนวณหาสินค้าที่ขายดีที่สุด และ น้อยที่สุด ---
+            const productSalesSummary = {};
+            recordsList.filter(r => r.type === 'out').forEach(r => {
+                productSalesSummary[r.product] = (productSalesSummary[r.product] || 0) + r.qty;
+            });
+
+            const sortedProducts = Object.entries(productSalesSummary).sort((a, b) => b[1] - a[1]);
+            const mostSoldProduct = sortedProducts.length > 0 ? sortedProducts[0] : ['ยังไม่มีข้อมูล', 0];
+            const leastSoldProduct = sortedProducts.length > 0 ? sortedProducts[sortedProducts.length - 1] : ['ยังไม่มีข้อมูล', 0];
+
             const handleAddToCart = (product, sizeKey, delivery, qty, unit, currentStock) => {
                 const orderQty = Number(qty);
                 if (orderQty <= 0) return alert('กรุณาระบุจำนวนที่ถูกต้อง');
@@ -338,6 +383,23 @@
                 setRecordQty(1); setRecordPrice(0);
             };
 
+            // ฟังก์ชันส่งรีวิว
+            const handleAddReview = (e) => {
+                e.preventDefault();
+                if(!newReviewName || !newReviewComment) return alert('กรุณากรอกชื่อและข้อความรีวิวให้ครบถ้วน');
+                const reviewItem = {
+                    id: Date.now(),
+                    name: newReviewName,
+                    rating: Number(newReviewRating),
+                    comment: newReviewComment,
+                    date: new Date().toISOString().split('T')[0]
+                };
+                setReviews([reviewItem, ...reviews]);
+                setNewReviewName('');
+                setNewReviewComment('');
+                alert('⭐ ขอบคุณสำหรับรีวิวและความคิดเห็นครับ!');
+            };
+
             const totalImported = recordsList.filter(r => r.type === 'in').reduce((sum, r) => sum + r.qty, 0);
             const totalSoldQty = recordsList.filter(r => r.type === 'out').reduce((sum, r) => sum + r.qty, 0);
             const totalRevenue = recordsList.filter(r => r.type === 'out').reduce((sum, r) => sum + (r.price || 0), 0);
@@ -363,6 +425,8 @@
                         <div className={`menu-item ${activeTab === 'shop' ? 'active' : ''}`} onClick={() => setActiveTab('shop')}>🛒 หน้าร้านเลือกซื้อสินค้า</div>
                         <div className={`menu-item ${activeTab === 'cart' || activeTab === 'checkout' ? 'active' : ''}`} onClick={() => setActiveTab('cart')} style={{ color: cart.length > 0 ? '#26dec0' : '' }}>🛍️ ตะกร้าสินค้า ({cart.length})</div>
                         <div className={`menu-item ${activeTab === 'records' ? 'active' : ''}`} onClick={() => setActiveTab('records')}>📝 บันทึกข้อมูลซื้อ-ขาย</div>
+                        <div className={`menu-item ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>📊 วิเคราะห์ & ผู้ใช้งาน</div>
+                        <div className={`menu-item ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => setActiveTab('reviews')}>⭐ คำติชม & เรตติ้ง</div>
                         <div className={`menu-item ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>📦 เช็คจำนวนคำสั่งซื้อ</div>
                         <div className={`menu-item ${activeTab === 'tracking' ? 'active' : ''}`} onClick={() => setActiveTab('tracking')}>🚚 เช็คสถานะการขนส่ง</div>
                     </div>
@@ -678,6 +742,117 @@
                                         )}
                                     </tbody>
                                 </table>
+                            </div>
+                        )}
+
+                        {/* ======================= 4.5 หน้าวิเคราะห์ & ผู้ใช้งาน (Analytics) ======================= */}
+                        {activeTab === 'analytics' && (
+                            <div className="section">
+                                <h1 className="header-title">📊 วิเคราะห์ข้อมูล & สถิติผู้ใช้งาน</h1>
+                                
+                                <div className="dashboard-cards">
+                                    <div className="card bg-green">
+                                        <h3>🏆 สินค้าขายดีที่สุด</h3>
+                                        <p style={{fontSize: '1.5rem'}}>{mostSoldProduct[0]}</p>
+                                        <span style={{fontSize: '0.9rem'}}>ยอดขาย: {mostSoldProduct[1]} หน่วย</span>
+                                    </div>
+                                    <div className="card bg-pink">
+                                        <h3>⚠️ สินค้าขายได้น้อยที่สุด</h3>
+                                        <p style={{fontSize: '1.5rem'}}>{leastSoldProduct[0]}</p>
+                                        <span style={{fontSize: '0.9rem'}}>ยอดขาย: {leastSoldProduct[1]} หน่วย</span>
+                                    </div>
+                                    <div className="card bg-blue">
+                                        <h3>⏳ รอบเก็บข้อมูลระบบ</h3>
+                                        <p style={{fontSize: '1.8rem'}}>{dataRetentionDays} วัน</p>
+                                        <span style={{fontSize: '0.9rem'}}>รอบการจัดเก็บ (2 เดือน)</span>
+                                    </div>
+                                </div>
+
+                                <div className="tracking-box" style={{marginBottom: '30px'}}>
+                                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                        <h3 style={{margin: 0}}>📈 กราฟแสดงสถิติผู้ใช้งานเข้าชมระบบรายวัน</h3>
+                                        <button onClick={handleResetAnalytics} style={{width: 'auto', background: 'rgba(236, 72, 153, 0.1)', color: '#ec4899', border: '1px solid #ec4899', margin: 0, padding: '8px 15px'}}>
+                                            🔄 รีเซ็ตข้อมูลรอบใหม่
+                                        </button>
+                                    </div>
+                                    
+                                    <div className="chart-container">
+                                        {dailyUsers.map((item, index) => {
+                                            const maxUsers = 500; // ค่าสูงสุดสำหรับเทียบสัดส่วนความสูงกราฟ
+                                            const barHeight = (item.users / maxUsers) * 100;
+                                            return (
+                                                <div className="chart-bar-wrapper" key={index}>
+                                                    <span style={{fontSize: '0.75rem', color: '#26dec0', marginBottom: '5px'}}>{item.users}</span>
+                                                    <div className="chart-bar" style={{height: `${Math.max(barHeight, 5)}%`}}></div>
+                                                    <div className="chart-label">{item.day}</div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <p style={{color: '#8b949e', fontSize: '0.9rem', textAlign: 'center', marginTop: '15px'}}>
+                                        * ระบบเก็บบันทึกสถิติอัตโนมัติ และจะทำการหมุนเวียนล้างข้อมูลอัตโนมัติเมื่อครบกำหนดรอบ 2 เดือน ({dataRetentionDays} วัน)
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ======================= 4.6 หน้าคำติชม & เรตติ้ง (Reviews) ======================= */}
+                        {activeTab === 'reviews' && (
+                            <div className="section">
+                                <h1 className="header-title">⭐ คำติชมจากลูกค้า และคะแนนความพึงพอใจ</h1>
+                                
+                                <div className="shop-grid" style={{gridTemplateColumns: '1fr 1.5fr', gap: '30px', alignItems: 'start'}}>
+                                    
+                                    {/* ฟอร์มเขียนรีวิว */}
+                                    <div className="product-card" style={{margin: 0}}>
+                                        <h3 style={{marginTop: 0}}>เขียนรีวิวและให้คะแนน</h3>
+                                        <form onSubmit={handleAddReview}>
+                                            <div className="form-group">
+                                                <label>ชื่อของคุณ:</label>
+                                                <input type="text" placeholder="ระบุชื่อลูกค้า" value={newReviewName} onChange={e => setNewReviewName(e.target.value)} required />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>ให้คะแนนความพึงพอใจ (ดาว):</label>
+                                                <select value={newReviewRating} onChange={e => setNewReviewRating(e.target.value)}>
+                                                    <option value="5">⭐⭐⭐⭐⭐ (5 ดาว - ดีเยี่ยม)</option>
+                                                    <option value="4">⭐⭐⭐⭐ (4 ดาว - มาก)</option>
+                                                    <option value="3">⭐⭐⭐ (3 ดาว - ปานกลาง)</option>
+                                                    <option value="2">⭐⭐ (2 ดาว - น้อย)</option>
+                                                    <option value="1">⭐ (1 ดาว - ปรับปรุง)</option>
+                                                </select>
+                                            </div>
+                                            <div className="form-group">
+                                                <label>ความคิดเห็น / คำติชม:</label>
+                                                <textarea rows="4" placeholder="บอกเล่าความประทับใจหรือข้อเสนอแนะ..." value={newReviewComment} onChange={e => setNewReviewComment(e.target.value)} required></textarea>
+                                            </div>
+                                            <button type="submit" style={{background: '#26dec0', color: '#000'}}>📤 ส่งรีวิวสินค้า</button>
+                                        </form>
+                                    </div>
+
+                                    {/* ตารางแสดงรายการรีวิวทั้งหมด */}
+                                    <div className="tracking-box" style={{margin: 0}}>
+                                        <h3 style={{marginTop: 0}}>รายการรีวิวจากลูกค้า ({reviews.length} รายการ)</h3>
+                                        {reviews.length === 0 ? (
+                                            <p style={{color: '#8b949e', textAlign: 'center', padding: '20px'}}>ยังไม่มีรีวิวในขณะนี้</p>
+                                        ) : (
+                                            <div style={{display: 'flex', flexDirection: 'column', gap: '15px', maxHeight: '450px', overflowY: 'auto'}}>
+                                                {reviews.map(rev => (
+                                                    <div key={rev.id} style={{background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '15px'}}>
+                                                        <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                                                            <strong style={{color: '#26dec0'}}>{rev.name}</strong>
+                                                            <span style={{color: '#8b949e', fontSize: '0.85rem'}}>{rev.date}</span>
+                                                        </div>
+                                                        <div style={{color: '#ffd700', marginBottom: '8px', fontSize: '1.1rem'}}>
+                                                            {'⭐'.repeat(rev.rating)}
+                                                        </div>
+                                                        <p style={{margin: 0, color: '#e2e8f0', fontSize: '0.95rem'}}>{rev.comment}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                </div>
                             </div>
                         )}
                         
